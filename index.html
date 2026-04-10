@@ -279,6 +279,43 @@
       .face-top    { transform: rotateX(90deg) translateZ(45px); }
       .face-bottom { transform: rotateX(-90deg) translateZ(45px); }
     }
+    .claim-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.claim-box {
+  background: linear-gradient(135deg, #fffdf8, #fdf0e0);
+  border: 1px solid #e0c898;
+  border-radius: 20px;
+  padding: 1.2rem 2rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(46,26,14,.25);
+  transform: scale(.7);
+  opacity: 0;
+  transition: all .35s cubic-bezier(.17,.89,.32,1.28);
+}
+
+.claim-box.show {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.claim-emoji {
+  font-size: 2rem;
+  margin-bottom: .4rem;
+}
+
+.claim-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  color: var(--rose);
+}
   </style>
 </head>
 <body>

@@ -358,7 +358,7 @@ let rolling    = false;
 // ── Load rewards.json ─────────────────────────────────────────────────────────
 async function loadRewards() {
   try {
-    const res = await fetch('./rewards.json');
+    fetch('./rewards.json');
     if (!res.ok) throw new Error();
     allRewards = await res.json();
     document.getElementById('loading-state').style.display = 'none';

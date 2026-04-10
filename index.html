@@ -358,24 +358,47 @@ let rolling    = false;
 // ── Load rewards.json ─────────────────────────────────────────────────────────
 async function loadRewards() {
   try {
-    const res = await fetch('./rewards.json');
+    const res = await fetch('rewards.json');
     if (!res.ok) throw new Error();
+
     allRewards = await res.json();
+
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('main-content').style.display  = 'block';
+
     document.getElementById('pool-badge').textContent =
       `✦ ${allRewards.length} rewards in the pool ✦`;
+
   } catch {
     document.getElementById('loading-state').innerHTML =
-      '⚠️ Could not load <code>rewards.json</code> — make sure it\'s in the same folder.';
+      '⚠️ Could not load <code>rewards.json</code>';
   }
 }
 
-// ── Pick 6 random unique entries from the pool ────────────────────────────────
+// ── Claimed rewards system ────────────────────────────────────────────────────
+function getClaimed() {
+  return JSON.parse(localStorage.getItem('claimedRewards') || '[]');
+}
+
+function saveClaimed(list) {
+  localStorage.setItem('claimedRewards', JSON.stringify(list));
+}
+
+// ── Pick 6 (NO DUPES until all used) ───────────────────────────────────────────
 function pickSix() {
-  return [...allRewards]
+  const claimed = getClaimed();
+
+  let available = allRewards.filter(r => !claimed.includes(r.title));
+
+  // if all used → reset
+  if (available.length === 0) {
+    localStorage.removeItem('claimedRewards');
+    available = [...allRewards];
+  }
+
+  return available
     .sort(() => Math.random() - .5)
-    .slice(0, Math.min(6, allRewards.length));
+    .slice(0, Math.min(6, available.length));
 }
 
 // ── Roll ──────────────────────────────────────────────────────────────────────
@@ -383,7 +406,7 @@ function rollDice() {
   if (rolling || !allRewards.length) return;
   rolling = true;
 
-  roundPool = pickSix();   // fresh 6 every single roll
+  roundPool = pickSix();
 
   const dice  = document.getElementById('dice');
   const btn   = document.getElementById('roll-btn');
@@ -396,42 +419,85 @@ function rollDice() {
 
   dice.classList.add('rolling');
 
-  const result = Math.floor(Math.random() * roundPool.length) + 1; // 1–6
+  const result = Math.floor(Math.random() * roundPool.length) + 1;
 
   setTimeout(() => {
     dice.classList.remove('rolling');
+
     numEl.textContent = result;
     lblEl.textContent = 'You rolled…';
+
     requestAnimationFrame(() => {
       numEl.classList.add('show');
       lblEl.classList.add('show');
     });
+
     setTimeout(() => showReward(result), 700);
+
   }, 1050);
 }
 
+// ── Show reward ───────────────────────────────────────────────────────────────
 function showReward(n) {
   const r = roundPool[n - 1];
+
   document.getElementById('reward-emoji').textContent  = r.emoji;
   document.getElementById('reward-rolled').textContent = `You rolled a ${n}`;
   document.getElementById('reward-title').textContent  = r.title;
   document.getElementById('reward-desc').textContent   = r.desc;
+
   document.getElementById('overlay').classList.add('visible');
+
   launchFireworks(4500);
 }
 
-function closeReward(e) {
-  if (e && e.target !== document.getElementById('overlay') &&
-           !e.target.classList.contains('close-btn')) return;
+// ── CLAIM REWARD (NEW CORE FEATURE) ───────────────────────────────────────────
+function claimReward() {
+  const title = document.getElementById('reward-title').textContent;
+
+  // save claimed
+  const claimed = getClaimed();
+  if (!claimed.includes(title)) {
+    claimed.push(title);
+    saveClaimed(claimed);
+  }
+
+  // close modal
   document.getElementById('overlay').classList.remove('visible');
+
+  // show popup
+  const popup = document.getElementById('claim-popup');
+  const box = popup.querySelector('.claim-box');
+
+  box.classList.add('show');
+
+  // reset roll state
   document.getElementById('roll-btn').disabled = false;
   rolling = false;
+
+  // hide popup
+  setTimeout(() => {
+    box.classList.remove('show');
+  }, 1800);
+
   stopFireworks();
 }
 
-// ── Fireworks ─────────────────────────────────────────────────────────────────
+// ── Close modal (background click) ────────────────────────────────────────────
+function closeReward(e) {
+  if (e && e.target !== document.getElementById('overlay')) return;
+
+  document.getElementById('overlay').classList.remove('visible');
+  document.getElementById('roll-btn').disabled = false;
+  rolling = false;
+
+  stopFireworks();
+}
+
+// ── Fireworks (UNCHANGED) ─────────────────────────────────────────────────────
 const canvas = document.getElementById('fireworks-canvas');
 const ctx    = canvas.getContext('2d');
+
 let fwInterval = null, fwTimeout = null, rafId = null;
 const particles = [];
 
@@ -440,27 +506,45 @@ const FW_COLORS = [
   '#fff0cc','#ffd6e0','#f5c842','#ff8fa3','#ffffff','#ffe4b5','#ffb3c6'
 ];
 
-function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+function resize() {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+}
 resize();
 window.addEventListener('resize', resize);
 
 class Particle {
   constructor(x, y) {
-    this.x = x; this.y = y;
+    this.x = x;
+    this.y = y;
     this.color = FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)];
-    const a = Math.random() * Math.PI * 2, s = Math.random() * 6 + 2;
-    this.vx = Math.cos(a) * s; this.vy = Math.sin(a) * s;
-    this.alpha = 1; this.decay = Math.random() * .018 + .012;
-    this.radius = Math.random() * 3 + 1.5; this.gravity = .12;
+
+    const a = Math.random() * Math.PI * 2;
+    const s = Math.random() * 6 + 2;
+
+    this.vx = Math.cos(a) * s;
+    this.vy = Math.sin(a) * s;
+
+    this.alpha = 1;
+    this.decay = Math.random() * .018 + .012;
+    this.radius = Math.random() * 3 + 1.5;
+    this.gravity = .12;
     this.trail = [];
   }
+
   update() {
     this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
     if (this.trail.length > 6) this.trail.shift();
-    this.vy += this.gravity; this.vx *= .98;
-    this.x += this.vx; this.y += this.vy;
+
+    this.vy += this.gravity;
+    this.vx *= .98;
+
+    this.x += this.vx;
+    this.y += this.vy;
+
     this.alpha -= this.decay;
   }
+
   draw() {
     this.trail.forEach((p, i) => {
       ctx.beginPath();
@@ -469,52 +553,66 @@ class Particle {
       ctx.globalAlpha = p.alpha * (i / this.trail.length) * .4;
       ctx.fill();
     });
+
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color; ctx.globalAlpha = this.alpha; ctx.fill();
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = this.alpha;
+    ctx.fill();
+
     ctx.globalAlpha = 1;
   }
 }
 
 function burst(x, y) {
   for (let i = 0; i < 90; i++) particles.push(new Particle(x, y));
-  for (let i = 0; i < 12; i++) {
-    const p = new Particle(x, y);
-    p.color = '#fff'; p.radius = Math.random() * 2 + .5; p.decay = .03;
-    particles.push(p);
-  }
 }
 
 function fwLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   for (let i = particles.length - 1; i >= 0; i--) {
-    particles[i].update(); particles[i].draw();
+    particles[i].update();
+    particles[i].draw();
+
     if (particles[i].alpha <= 0) particles.splice(i, 1);
   }
+
   rafId = requestAnimationFrame(fwLoop);
 }
 
 function launchFireworks(duration) {
-  stopFireworks(); fwLoop();
-  setTimeout(() => burst(canvas.width * .3,  canvas.height * .3),  0);
-  setTimeout(() => burst(canvas.width * .7,  canvas.height * .25), 200);
-  setTimeout(() => burst(canvas.width * .5,  canvas.height * .4),  400);
+  stopFireworks();
+  fwLoop();
+
+  burst(canvas.width * .5, canvas.height * .4);
+
   fwInterval = setInterval(() => {
-    burst(canvas.width * (.15 + Math.random() * .7), canvas.height * (.1 + Math.random() * .5));
+    burst(
+      canvas.width * (.2 + Math.random() * .6),
+      canvas.height * (.1 + Math.random() * .5)
+    );
   }, 600);
+
   fwTimeout = setTimeout(stopFireworks, duration);
 }
 
 function stopFireworks() {
-  clearInterval(fwInterval); clearTimeout(fwTimeout); fwInterval = fwTimeout = null;
-  setTimeout(() => {
-    cancelAnimationFrame(rafId);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.length = 0;
-  }, 2000);
+  clearInterval(fwInterval);
+  clearTimeout(fwTimeout);
+
+  fwInterval = fwTimeout = null;
+
+  cancelAnimationFrame(rafId);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.length = 0;
 }
 
+// ── Init ──────────────────────────────────────────────────────────────────────
 loadRewards();
 </script>
+
+
+
 </body>
 </html>

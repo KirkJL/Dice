@@ -1,0 +1,88 @@
+const REWARDS = [
+  {
+    emoji: "👨‍🍳",
+    title: "You Pick, I Cook",
+    desc: "You choose anything you want — I’ll cook it properly from scratch. You relax, I handle everything (yes, including cleanup)."
+  },
+  {
+    emoji: "🍽️",
+    title: "Date Night",
+    desc: "Your call — we go out somewhere nice or order your favourite takeaway. Either way, it’s a proper date and I’ve got it covered."
+  },
+  {
+    emoji: "🎁",
+    title: "Surprise Gift",
+    desc: "A mystery gift, picked just for you. No hints — just something I know you’ll love."
+  },
+  {
+    emoji: "🌸",
+    title: "Flowers",
+    desc: "A surprise bouquet of your favourite flowers, just because. No reason needed."
+  },
+  {
+    emoji: "💆‍♀️",
+    title: "Massage Night",
+    desc: "A proper, no-rush massage. Candles, music, full relax mode — you don’t lift a finger."
+  },
+  {
+    emoji: "🫡",
+    title: "Your Wish Night",
+    desc: "Until midnight, I’m on call. Drinks, snacks, favours — whatever you ask (within reason), I’m doing it."
+  },
+
+  // --- ADDED ---
+
+  {
+    emoji: "🧹",
+    title: "Zero Effort Day",
+    desc: "You do nothing today. I handle chores, food, errands — everything. You just relax."
+  },
+  {
+    emoji: "🍳",
+    title: "Breakfast in Bed",
+    desc: "You stay in bed. I make your favourite breakfast from scratch and bring it to you."
+  },
+  {
+    emoji: "🚗",
+    title: "Snack Run",
+    desc: "We go get whatever you’re craving — late night or random trip. No limits, just vibes."
+  },
+  {
+    emoji: "📦",
+    title: "Mystery Box",
+    desc: "I put together a box of things you like — snacks, cute stuff, random surprises."
+  },
+  {
+    emoji: "🎮",
+    title: "Your Rules Night",
+    desc: "You decide everything — what we do, eat, watch, play. No complaints from me."
+  },
+
+  // --- NEW ONES (strong additions) ---
+
+  {
+    emoji: "🛌",
+    title: "Lazy Day Pass",
+    desc: "We cancel all plans. Hoodies, snacks, no responsibilities. Full do-nothing day together."
+  },
+  {
+    emoji: "🥂",
+    title: "Drinks On Me",
+    desc: "I’ll get you your favourite drinks — at home or out. You just enjoy, I’ll keep them coming."
+  },
+  {
+    emoji: "🍰",
+    title: "Dessert Run",
+    desc: "We go out just for dessert — cakes, donuts, whatever you’re craving. No rules, just sugar."
+  },
+  {
+    emoji: "🧑‍🍳",
+    title: "Cook Together Night",
+    desc: "We cook something together — you lead, I assist. Might be chaos, but that’s part of it."
+  },
+  {
+    emoji: "🎧",
+    title: "No Phone Night",
+    desc: "No phones, no distractions. Just us, music, food, and actual time together."
+  }
+];
